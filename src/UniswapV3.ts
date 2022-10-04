@@ -55,8 +55,7 @@ export class UniV3 {
     }
 
     async getPoolPrice(): Promise<number> {
-        const sqrtPriceX96 = JSBI.BigInt(await this.getSqrtPriceX96())
-        console.log(`sqrtprice : ${JSBI.toNumber(sqrtPriceX96)}`);
+        const sqrtPriceX96 = JSBI.BigInt(await this.getSqrtPriceX96());
         const rightShiftAmt = JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(192));
         const priceX96 = JSBI.multiply(sqrtPriceX96, sqrtPriceX96);
         JSBI.multiply(priceX96, JSBI.BigInt(10 ** this.config.tokenDec0))
@@ -67,7 +66,6 @@ export class UniV3 {
                     rightShiftAmt
                 )
         ) / 10 ** this.config.tokenDec1;
-        console.log(`pool price: ${rtnVal}`);
         return rtnVal;
     }
 

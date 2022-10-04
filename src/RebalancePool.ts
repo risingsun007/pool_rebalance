@@ -1,9 +1,8 @@
 import { UniV3Config, UniV3 } from "./UniswapV3";
 import { Weth } from "./WETH";
-import { sleep, routerAddress, gweiToEth } from "./utils";
-require('dotenv').config()
+import { sleep, routerAddress, gweiToEth, getPrivateKey, getTheoSlvtPrice, getAccountFromKey } from "./utils";
+import { Console } from "console";
 
-const runTestsOnTestNet = false;
 
 // You need to set these config values to run Program on Mainnet
 const config: UniV3Config = {
@@ -22,13 +21,17 @@ const config: UniV3Config = {
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9
     maxFeePerGas: gweiToEth(50),
     maxTradeSlippage: 1.15, // 1.15 = you will pay up to 15% more than current prc or trade reverts
-    privateKey: process.env.PRIVATE_KEY || "",
+    privateKey: getPrivateKey(),
 }
 
-
-async function doTrade(price: number, theoPrice: number, lastPlaceOrderTime: number) {
+async function doTrade(price: number, lastPlaceOrderTime: number) {
     let doBuy = false;
     let doSell = false;
+    let theoPrice = await getTheoSlvtPrice();
+    if (theoPrice < 0) {
+        console.log("failed to get theo SLVT price, not evualtion rebalance");
+        return { doBuy, doSell };
+    }
     if (Date.now() - lastPlaceOrderTime < config.minMillSecBetweenTrades) {
         return { doBuy, doSell };
     }
@@ -45,23 +48,47 @@ async function doTrade(price: number, theoPrice: number, lastPlaceOrderTime: num
     }
 }
 
+async function setupAllowance(tokenAddress: string) {
+    const minBalanceForApproval = 10 ** 20;
+    try {
+        const tokenCnt = new Weth(tokenAddress, config.httpConnector, config.privateKey, gweiToEth(3));
+        if (await tokenCnt.getAllowance(routerAddress) < minBalanceForApproval) {
+            console.log(`Approving router for trading on token ${tokenAddress}`)
+            await tokenCnt.approveMax(routerAddress);
+        }
+    } catch (e) {
+        console.log(`failed with setupAllowance with error: ${e}`)
+        throw (e);
+    }
+}
+
+async function setupAllowances() {
+    await setupAllowance(config.token0);
+    await setupAllowance(config.token1);
+}
+
 async function reBalance() {
+    const unlimitedImpact = true;
+    let poolPrice;
     let lastPlaceOrderTime: number = 0;
     const uniV3 = new UniV3(config);
     await uniV3.initialize();
+    await setupAllowances();
+    console.log(`starting rebalance account using account: ${getAccountFromKey(config.privateKey)}`);
 
     while (true) {
-        console.log(`pool price: ${await uniV3.getPoolPrice()}`);
-        if (false) {
-            try {
-                const { doBuy, doSell } = await doTrade(await uniV3.getPoolPrice(), await uniV3.getTargetedPrice(), lastPlaceOrderTime);
-                if (doBuy || doSell) {
-                    lastPlaceOrderTime = Date.now();
-                    await uniV3.placeTrade(doBuy);
-                }
-            } catch (e) {
-                console.log(`error with rebalance: ${e}`);
+        poolPrice = await uniV3.getPoolPrice();
+        console.log(`pool price: ${poolPrice}, theoPrice: ${await getTheoSlvtPrice()}`);
+        try {
+            const { doBuy, doSell } = await doTrade(await uniV3.getPoolPrice(), lastPlaceOrderTime);
+            if (doBuy || doSell) {
+                lastPlaceOrderTime = Date.now();
+                console.log(`would have done trade here, isbuy: ${doBuy}, pool price: ${await uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);
+                //uncomment to trade
+                //await uniV3.placeTrade(doBuy, unlimitedImpact);
             }
+        } catch (e) {
+            console.log(`error with rebalance: ${e}`);
         }
         await sleep(config.sleepTimeMillSec);
     }

@@ -15,6 +15,7 @@
     "sell": "node out/RebalancePool.js sell",
     "buy": "node out/RebalancePool.js buy",
     "rebalance": "node out/RebalancePool.js",
-    "build": "npx tsc --build"
+    "build": "npx tsc --build",
+    "start": "node out/RebalancePool.js"
   }
 }

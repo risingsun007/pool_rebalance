@@ -1,6 +1,6 @@
 import { UniV3Config, UniV3 } from "./UniswapV3";
 import { Weth } from "./WETH";
-import { sleep, routerAddress, gweiToEth } from "./utils";
+import { sleep, routerAddress, gweiToEth, getPrivateKey } from "./utils";
 require('dotenv').config()
 
 const config: UniV3Config = {
@@ -10,8 +10,8 @@ const config: UniV3Config = {
     // pool address is  0x61975B078473Ec6dDcEfd80b2Ab8E57cC78222F7
     tokenDec0: 18,
     tokenDec1: 18,
-    buyAmtToken0: .1 * 10 ** 18,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
-    sellAmtToken0: .1 * 10 ** 18,
+    buyAmtToken0: .01 * 10 ** 18,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
+    sellAmtToken0: .01 * 10 ** 18,
     targetSellPrct: 110,
     targetBuyPrct: 90,
     minMillSecBetweenTrades: 30000,
@@ -20,11 +20,12 @@ const config: UniV3Config = {
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9
     maxFeePerGas: gweiToEth(50),
     maxTradeSlippage: 1.15, // 1.15 = you will pay up to 15% more than current prc or trade reverts
-    privateKey: process.env.PRIVATE_KEY || "",
+    privateKey: getPrivateKey(),
 }
 
 async function test() {
-    const weth = new Weth(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
+    //sell WETH for other token, then sell other token
+    const weth = new Weth(config.token0, config.httpConnector, config.privateKey, gweiToEth(3));
     const uniV3 = new UniV3(config);
     await weth.initialize();
     await uniV3.initialize();
@@ -40,6 +41,12 @@ async function test() {
         console.log(`approve result: ${JSON.stringify(await weth.approve(routerAddress, 10000))}`);
     }
     console.log(`result: ${JSON.stringify(await uniV3.placeTrade(false))}`);
+
+    const token1 = new Weth(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
+    const balanceT1 = await token1.getMyBalance();
+    if (balanceT1) {
+        console.log(`result: ${JSON.stringify(await uniV3.placeTrade(true))}`);
+    }
 }
 
 test()

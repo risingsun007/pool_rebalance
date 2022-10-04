@@ -1,4 +1,6 @@
+import { json } from "stream/consumers";
 import { isNonNullExpression } from "typescript";
+import Web3 from "web3";
 
 export const routerAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 export const MIN_TICK_RATIO = 4295128739;
@@ -25,6 +27,10 @@ export function gweiToEth(x: number): number {
     return x * 10 ** 9;
 }
 
+export function getAccountFromKey(privateKey: string) {
+    const web3 = new Web3(new Web3.providers.HttpProvider(""));
+    return web3.eth.accounts.privateKeyToAccount(privateKey).address;
+}
 
 export function noExp(input: any) {
     let str: string;
@@ -48,3 +54,26 @@ export function noExp(input: any) {
     return str;
 }
 
+export function getPrivateKey() {
+    if (process.env['PRIVATE_KEY']) {
+        console.log("set private key from environmental variable");
+        return process.env['PRIVATE_KEY'];
+    } else {
+        require('dotenv').config()
+        if (process.env.PRIVATE_KEY) {
+            return process.env.PRIVATE_KEY;
+        } else {
+            return "";
+        }
+    }
+}
+
+export async function getTheoSlvtPrice() {
+    try {
+        let result = await fetch("https://silvertoken-backend.herokuapp.com/api/price/silver")
+        return (await result.json()).price;
+    } catch (e) {
+        console.log(`getTheoSlvtPrice failed with ${e}`);
+        return -99;
+    }
+}

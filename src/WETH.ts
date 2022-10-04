@@ -1,7 +1,9 @@
 const Web3 = require('web3');
 const WEthAbi = require("../ABI/weth.json");
 const Provider = require('@truffle/hdwallet-provider');
+const JSBI = require("jsbi");
 import { TxInfo, noExp, trimHex } from "./utils";
+
 
 export class Weth {
     web3: any;
@@ -58,6 +60,11 @@ export class Weth {
 
     async approve(spender: string, amount: number) {
         return await this.cnt.methods.approve(spender, noExp(amount * 10 ** this.numDecimals)).send(this.getTxParams(0));
+    }
+
+    async approveMax(spender: string) {
+        const maxNum = JSBI.subtract(JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(256)), JSBI.BigInt(1000));
+        return await this.cnt.methods.approve(spender, maxNum.toString()).send(this.getTxParams(0));
     }
 
 }
