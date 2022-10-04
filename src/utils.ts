@@ -3,6 +3,12 @@ import { isNonNullExpression } from "typescript";
 export const routerAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 export const MIN_TICK_RATIO = 4295128739;
 
+export function trimHex(str: string): string {
+    if (str && str.length > 4 && str.search("0x") >= 0) {
+        return str.slice(2);
+    }
+    return str;
+}
 export interface TxInfo {
     from: string,
     gas: number,

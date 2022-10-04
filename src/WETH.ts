@@ -1,7 +1,7 @@
 const Web3 = require('web3');
 const WEthAbi = require("../ABI/weth.json");
 const Provider = require('@truffle/hdwallet-provider');
-import { TxInfo, noExp } from "./utils";
+import { TxInfo, noExp, trimHex } from "./utils";
 
 export class Weth {
     web3: any;
@@ -12,7 +12,7 @@ export class Weth {
     maxPriorityFee: number;
 
     constructor(address: string, httpConnector: string, key: string, maxPriorityFee: number) {
-        this.web3 = new Web3(new Provider(key, httpConnector));
+        this.web3 = new Web3(new Provider(trimHex(key), httpConnector));
         this.cnt = new this.web3.eth.Contract(WEthAbi, address);
         this.key = key;
         this.myAddress = this.web3.eth.accounts.privateKeyToAccount(key).address;

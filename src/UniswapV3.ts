@@ -3,7 +3,7 @@ const routerV3Abi = require("../ABI/routerV3.json");
 const factoryV3Abi = require("../ABI/factoryV3.json");
 const Web3 = require('web3');
 const JSBI = require('jsbi');
-import { TxInfo, noExp, MIN_TICK_RATIO } from "./utils";
+import { TxInfo, noExp, MIN_TICK_RATIO, trimHex } from "./utils";
 //const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8"; SLVT/USDC 1% pool
 const routerAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 const factoryAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
@@ -36,7 +36,7 @@ export class UniV3 {
     swapRouter: any;
 
     constructor(config1: UniV3Config) {
-        this.web3 = new Web3(new Provider(config1.privateKey, config1.httpConnector));
+        this.web3 = new Web3(new Provider(trimHex(config1.privateKey), config1.httpConnector));
         this.poolV3 = null;
         this.swapRouter = new this.web3.eth.Contract(routerV3Abi, routerAddress);
         this.config = config1;
