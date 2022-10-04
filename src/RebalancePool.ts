@@ -1,12 +1,12 @@
 import { UniV3Config, UniV3 } from "./UniswapV3";
 import { Weth } from "./WETH";
-import { sleep, routerAddress, gweiToEth, getPrivateKey, getTheoSlvtPrice, getAccountFromKey } from "./utils";
+import { sleep, routerAddress, gweiToEth, getPrivateKey, getTheoSlvtPrice, getAccountFromKey, getHttpConnector } from "./utils";
 import { Console } from "console";
 
 
 // You need to set these config values to run Program on Mainnet
 const config: UniV3Config = {
-    httpConnector: "https://mainnet.infura.io/v3/96be6c20daf74b9093bc3c3db80f801d",
+    httpConnector: getHttpConnector(), //"https://mainnet.infura.io/v3/96be6c20daf74b9093bc3c3db80f801d",
     token0: "0x652594082f97392a1703D80985Ab575085f34a4e", // SLVT token Address
     token1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC token Address
     tokenDec0: 8,
@@ -15,7 +15,7 @@ const config: UniV3Config = {
     sellAmtToken0: .001 * 10 ** 6,
     targetSellPrct: 110,
     targetBuyPrct: 90,
-    minMillSecBetweenTrades: 30000,
+    minMillSecBetweenTrades: 120000,
     sleepTimeMillSec: 10000,
     feeLevel: 10000, //10000 = 1%
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9

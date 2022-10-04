@@ -7,7 +7,7 @@ export const MIN_TICK_RATIO = 4295128739;
 
 export function trimHex(str: string): string {
     if (str && str.length > 4 && str.search("0x") >= 0) {
-        return str.slice(2);
+        return str.trim().slice(2);
     }
     return str;
 }
@@ -78,3 +78,13 @@ export async function getTheoSlvtPrice() {
         return -99;
     }
 }
+
+
+export function getHttpConnector() {
+    if (process.env['HTTP_CONNECTOR']) {
+        return process.env['HTTP_CONNECTOR'];
+    } else {
+        return "";
+    }
+}
+
