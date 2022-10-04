@@ -1,4 +1,4 @@
-<h1> Program functions </h1>
+<h1>Overview </h1>
 This program rebalances the SLVT/USDC pool price to stay around theoretical.  
 When the price of SLVT goes too high, SLVT is sold and when the price of SLVT goes
 too low SLVT is bought.   
