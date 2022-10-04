@@ -17,5 +17,8 @@
     "rebalance": "node out/RebalancePool.js",
     "build": "npx tsc --build",
     "start": "node out/RebalancePool.js"
-  }
+  },
+  "engines": {
+    "node": "16.x"
+  },
 }
