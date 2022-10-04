@@ -59,6 +59,7 @@ export function getPrivateKey() {
         console.log("set private key from environmental variable");
         return process.env['PRIVATE_KEY'];
     } else {
+        console.log("get private key from .env");
         require('dotenv').config()
         if (process.env.PRIVATE_KEY) {
             return process.env.PRIVATE_KEY;
