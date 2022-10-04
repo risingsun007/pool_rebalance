@@ -28,6 +28,10 @@ The SLVT sell once program can be run by entering
 The SLVT buy once program can be run by entering
 <strong>"npm run buy"</strong>
 
+<h1>Deployment Heroku</h1>
+
+Define the Config Vars PRIVATE_KEY and HTTP_CONNECTOR.
+For the PRIVATE_KEY don't put your private key in quotes.
 
 
 

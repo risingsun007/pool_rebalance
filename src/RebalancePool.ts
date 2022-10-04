@@ -11,7 +11,7 @@ const config: UniV3Config = {
     token1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC token Address
     tokenDec0: 8,
     tokenDec1: 6,
-    buyAmtToken0: .000000001 * 10 ** 8,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
+    buyAmtToken0: .0001 * 10 ** 8,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
     sellAmtToken0: .001 * 10 ** 6,
     targetSellPrct: 110,
     targetBuyPrct: 90,
