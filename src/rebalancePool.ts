@@ -21,14 +21,14 @@ export class RebalancePool {
             let amtNeeded = (isbuy ? this.config.buyAmtToken0 * price : this.config.sellAmtToken0)
                 / this.config.tokenDec0 * SAFETY_BUFFER;
 
-            if (amtNeeded < myBalance) {
+            if (myBalance < amtNeeded) {
                 console.log(`Don't have enough token ${isbuy ? this.config.token1 : this.config.token0} to sell in order to buy ${isbuy ? this.config.token0 : this.config.token1}`);
                 console.log(`You have ${myBalance} you need ${amtNeeded}`);
                 return false;
             }
-            
+
             console.log(`You have ${myBalance} you need ${amtNeeded}`);
-            
+
             return true;
         } catch (e) {
             console.log(`checkIfHaveEnough failed with error: ${e}`);
