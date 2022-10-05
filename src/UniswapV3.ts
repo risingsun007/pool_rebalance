@@ -113,7 +113,6 @@ export class UniV3 {
             noExp((await this.getSqrtPriceX96Decimal()) * this.config.maxTradeSlippage) // sqrtPriceLimitX96
         ];
         console.log(`buyToken0 data: ${JSON.stringify(data)}`);
-        // return;
         return await this.swapRouter.methods.exactOutputSingle(data).send(this.getTxParams());
     }
 
