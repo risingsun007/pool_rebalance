@@ -5,7 +5,7 @@ const JSBI = require("jsbi");
 import { TxInfo, noExp, trimHex } from "./utils";
 
 
-export class Weth {
+export class Erc20 {
     web3: any;
     cnt: any;
     numDecimals: number = 18;
