@@ -16,6 +16,10 @@ export class RebalancePool {
 
     async doHaveEnough(isbuy: boolean, price: number) {
         try {
+            // set this to true for the time being because there is very little 
+            // liquidity pool in the and the pool price is 10 ^ 40 vs a theo of 25
+            return true;
+            
             const SAFETY_BUFFER = 1.2;
             let myBalance = isbuy ? (await this.erc20Cnt1.getMyBalance()) : (await this.erc20Cnt0.getMyBalance());
             let amtNeeded = (isbuy ? this.config.buyAmtToken0 * price : this.config.sellAmtToken0)
