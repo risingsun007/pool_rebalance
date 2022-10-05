@@ -12,11 +12,11 @@
   },
   "scripts":{
     "test":  "node out/tests.js",
-    "sell": "node out/RebalancePool.js sell",
-    "buy": "node out/RebalancePool.js buy",
-    "rebalance": "node out/RebalancePool.js",
+    "sell": "node out/runner.js sell",
+    "buy": "node out/runner.js buy",
+    "rebalance": "node out/runner.js",
     "build": "npx tsc --build",
-    "start": "node out/RebalancePool.js"
+    "start": "node out/runner.js"
   },
   "engines": {
     "node": "16.x"

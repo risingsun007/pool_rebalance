@@ -1,5 +1,5 @@
-import { UniV3Config, UniV3 } from "./UniswapV3";
-import { Weth } from "./WETH";
+import { UniV3Config, UniV3 } from "./uniswapV3";
+import { Erc20 } from "./erc20";
 import { sleep, routerAddress, gweiToEth, getPrivateKey } from "./utils";
 require('dotenv').config()
 
@@ -25,7 +25,7 @@ const config: UniV3Config = {
 
 async function test() {
     //sell WETH for other token, then sell other token
-    const weth = new Weth(config.token0, config.httpConnector, config.privateKey, gweiToEth(3));
+    const weth = new Erc20(config.token0, config.httpConnector, config.privateKey, gweiToEth(3));
     const uniV3 = new UniV3(config);
     await weth.initialize();
     await uniV3.initialize();
@@ -42,11 +42,9 @@ async function test() {
     }
     console.log(`result: ${JSON.stringify(await uniV3.placeTrade(false))}`);
 
-    const token1 = new Weth(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
+    const token1 = new Erc20(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
     const balanceT1 = await token1.getMyBalance();
     if (balanceT1) {
         console.log(`result: ${JSON.stringify(await uniV3.placeTrade(true))}`);
     }
 }
-
-test()
