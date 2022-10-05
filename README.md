@@ -6,8 +6,10 @@ too low SLVT is bought.
 This program can also be set to buy ands sell SLVT.
 
 <h1>Setup</h1>
-A private key must be placed in file name .env in the root directory and
-the file must have the line PRIVATE_KEY="your private key".
+PRIVATE_KEY must be defined as an environmental variable or
+in the .env file.  If you are defining the PRIVATE_KEY variable
+in Heroku, do not place quotes around the key.
+
 npm and node must be installed for this program to work.
 To setup the program do the following on a command line: 
 <strong>1) "npm install"</strong>

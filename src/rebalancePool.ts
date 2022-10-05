@@ -1,13 +1,37 @@
 import { UniV3Config, UniV3 } from "./uniswapV3";
 import { Erc20 } from "./erc20";
-import { sleep, routerAddress, gweiToEth, getPrivateKey, getTheoSlvtPrice, getAccountFromKey, getHttpConnector } from "./utils";
-import { Console } from "console";
+import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey } from "./utils";
 
 export class RebalancePool {
     config: UniV3Config;
+    erc20Cnt0: Erc20;
+    erc20Cnt1: Erc20;
 
     constructor(config: UniV3Config) {
         this.config = config;
+        this.erc20Cnt0 = new Erc20(config.token0, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+        this.erc20Cnt1 = new Erc20(config.token1, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+
+    }
+
+    async doHaveEnough(isbuy: boolean, price: number) {
+        try {
+            const SAFETY_BUFFER = 1.2;
+            let myBalance = isbuy ? (await this.erc20Cnt1.getMyBalance()) : (await this.erc20Cnt0.getMyBalance());
+            let amtNeeded = (isbuy ? this.config.buyAmtToken0 * price : this.config.sellAmtToken0)
+                / this.config.tokenDec0 * SAFETY_BUFFER;
+
+            if (amtNeeded < myBalance) {
+                console.log(`Don't have enough token ${isbuy ? this.config.token1 : this.config.token0} to sell in order to buy ${isbuy ? this.config.token0 : this.config.token1}`);
+                console.log(`You have ${myBalance} you need ${amtNeeded}`);
+                return false;
+            }
+
+            return true;
+        } catch (e) {
+            console.log(`checkIfHaveEnough failed with error: ${e}`);
+            throw (e);
+        }
     }
 
     async doTrade(price: number, lastPlaceOrderTime: number) {
@@ -27,19 +51,22 @@ export class RebalancePool {
         }
 
         try {
-            return { doBuy: (price / theoPrice < this.config.targetBuyPrct), doSell: (price / theoPrice > this.config.targetSellPrct) };
+            return {
+                doBuy: (price / theoPrice < this.config.targetBuyPrct && (await this.doHaveEnough(true, price))),
+                doSell: price / theoPrice > this.config.targetSellPrct && (await this.doHaveEnough(false, price))
+            };
         } catch (e) {
             console.log(`doTrade error: ${e}`);
             throw (e)
         }
     }
 
-    async setupAllowance(tokenAddress: string) {
+    async setupAllowance(isToken0: boolean) {
         const minBalanceForApproval = 10 ** 20;
         try {
-            const tokenCnt = new Erc20(tokenAddress, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
+            const tokenCnt = isToken0 ? this.erc20Cnt0 : this.erc20Cnt1;
             if (await tokenCnt.getAllowance(routerAddress) < minBalanceForApproval) {
-                console.log(`Approving router for trading on token ${tokenAddress}`)
+                console.log(`Approving router for trading on token ${isToken0 ? this.config.token0 : this.config.token1}`)
                 await tokenCnt.approveMax(routerAddress);
             }
         } catch (e) {
@@ -49,8 +76,8 @@ export class RebalancePool {
     }
 
     async setupAllowances() {
-        await this.setupAllowance(this.config.token0);
-        await this.setupAllowance(this.config.token1);
+        await this.setupAllowance(true);
+        await this.setupAllowance(false);
     }
 
     async reBalance() {
