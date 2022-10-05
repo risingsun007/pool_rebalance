@@ -5,8 +5,8 @@ const Web3 = require('web3');
 const JSBI = require('jsbi');
 import { TxInfo, noExp, MIN_TICK_RATIO, trimHex } from "./utils";
 //const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8"; SLVT/USDC 1% pool
-const routerAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
-const factoryAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
+const ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+const FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
 const Provider = require('@truffle/hdwallet-provider');
 
 export interface UniV3Config {
@@ -38,13 +38,13 @@ export class UniV3 {
     constructor(config1: UniV3Config) {
         this.web3 = new Web3(new Provider(trimHex(config1.privateKey), config1.httpConnector));
         this.poolV3 = null;
-        this.swapRouter = new this.web3.eth.Contract(routerV3Abi, routerAddress);
+        this.swapRouter = new this.web3.eth.Contract(routerV3Abi, ROUTER_ADDRESS);
         this.config = config1;
         this.myAddress = this.web3.eth.accounts.privateKeyToAccount(config1.privateKey).address;
     }
 
     async initialize() {
-        const factoryV3 = new this.web3.eth.Contract(factoryV3Abi, factoryAddress);
+        const factoryV3 = new this.web3.eth.Contract(factoryV3Abi, FACTORY_ADDRESS);
         let poolAddress = await factoryV3.methods.getPool(this.config.token0, this.config.token1, this.config.feeLevel).call();
         console.log(`poolAddress: ${JSON.stringify(poolAddress)}`)
         if (parseInt(poolAddress, 16) === 0) {
