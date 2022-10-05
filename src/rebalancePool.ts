@@ -26,7 +26,9 @@ export class RebalancePool {
                 console.log(`You have ${myBalance} you need ${amtNeeded}`);
                 return false;
             }
-
+            
+            console.log(`You have ${myBalance} you need ${amtNeeded}`);
+            
             return true;
         } catch (e) {
             console.log(`checkIfHaveEnough failed with error: ${e}`);
