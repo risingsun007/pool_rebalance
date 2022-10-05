@@ -48,5 +48,3 @@ async function test() {
         console.log(`result: ${JSON.stringify(await uniV3.placeTrade(true))}`);
     }
 }
-
-test()
