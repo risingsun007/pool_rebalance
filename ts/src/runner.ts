@@ -1,7 +1,5 @@
 import { UniV3Config, UniV3 } from "./uniswapV3";
-import { Erc20 } from "./erc20";
-import { sleep, routerAddress, gweiToEth, getPrivateKey, getTheoSlvtPrice, getAccountFromKey, getHttpConnector } from "./utils";
-import { Console } from "console";
+import { gweiToEth, getPrivateKey, getHttpConnector } from "./utils";
 import { RebalancePool } from "./rebalancePool";
 
 

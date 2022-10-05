@@ -1,5 +1,5 @@
 const Web3 = require('web3');
-const WEthAbi = require("../ABI/weth.json");
+const WEthAbi = require("../../ABI/weth.json");
 const Provider = require('@truffle/hdwallet-provider');
 const JSBI = require("jsbi");
 import { TxInfo, noExp, trimHex } from "./utils";

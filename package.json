@@ -11,12 +11,12 @@
     "web3": "^1.8.0"
   },
   "scripts":{
-    "test":  "node out/tests.js",
-    "sell": "node out/runner.js sell",
-    "buy": "node out/runner.js buy",
-    "rebalance": "node out/runner.js",
+    "test":  "node dist/test/tests.js",
+    "sell": "node dist/src/runner.js sell",
+    "buy": "node dist/src/runner.js buy",
+    "rebalance": "node dist/src/runner.js",
     "build": "npx tsc --build",
-    "start": "node out/runner.js"
+    "start": "node dist/src/runner.js"
   },
   "engines": {
     "node": "16.x"
