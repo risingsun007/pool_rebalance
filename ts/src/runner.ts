@@ -16,7 +16,7 @@ const config: UniV3Config = {
     targetSellPrct: 110,
     targetBuyPrct: 90,
     minMillSecBetweenTrades: 120000,
-    sleepTimeMillSec: 10000,
+    sleepTimeMillSec: 100000,
     feeLevel: 10000, //10000 = 1%
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9
     maxFeePerGas: gweiToEth(50),
