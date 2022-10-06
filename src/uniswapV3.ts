@@ -1,6 +1,6 @@
-const poolV3Abi = require("../../ABI/poolV3.json");
-const routerV3Abi = require("../../ABI/routerV3.json");
-const factoryV3Abi = require("../../ABI/factoryV3.json");
+const poolV3Abi = require("../../abi/poolV3.json");
+const routerV3Abi = require("../../abi/routerV3.json");
+const factoryV3Abi = require("../../abi/factoryV3.json");
 const Web3 = require('web3');
 const JSBI = require('jsbi');
 import { TxInfo, noExp, MIN_TICK_RATIO, trimHex } from "./utils";
