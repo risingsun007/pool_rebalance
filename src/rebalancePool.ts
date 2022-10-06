@@ -90,7 +90,9 @@ export class RebalancePool {
         let lastPlaceOrderTime: number = 0;
         const uniV3 = new UniV3(this.config);
         await uniV3.initialize();
-        await this.setupAllowances();
+        // disables for testing purposes
+        // renable when running live account
+        //- await this.setupAllowances();
         console.log(`starting rebalance account using account: ${getAccountFromKey(this.config.privateKey)}`);
 
         while (true) {
