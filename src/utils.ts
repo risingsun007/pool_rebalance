@@ -2,6 +2,65 @@ import Web3 from "web3";
 
 export const routerAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 export const MIN_TICK_RATIO = 4295128739;
+export const SWAP_EVENT_HASH = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67";
+
+export interface DbInfo {
+    host: string,
+    database: string,
+    user: string,
+    port: number,
+    password: string
+};
+
+export const SWAPV3_EVENT_ABI = [{
+    type: 'uint256',
+    name: 'eventHash',
+    indexed: true
+}, {
+    type: 'address',
+    name: 'sender',
+    indexed: true
+}, {
+    type: 'address',
+    name: 'recipient',
+    indexed: true
+}, {
+    type: 'int256',
+    name: 'amount0'
+}, {
+    type: 'int256',
+    name: 'amount1'
+}, {
+    type: 'uint160',
+    name: ' sqrtPriceX96'
+}, {
+    type: 'uint128',
+    name: 'liquidity',
+}, {
+    type: 'int24',
+    name: 'tick',
+}];
+
+export interface Swap {
+    time: number,
+    amount0: number,
+    amount1: number,
+    sqrtPriceX96: number,
+    liquidity: number,
+    tick: number,
+    price: number,
+    hash: string,
+    blockNumber: number,
+    token0: string,
+    token1: string,
+    pool: string
+};
+
+export interface UniV3Error {
+    time: number,
+    type: string,
+    msg: string
+};
 
 export function trimHex(str: string): string {
     if (str && str.length > 4 && str.search("0x") >= 0) {

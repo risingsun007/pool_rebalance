@@ -1,17 +1,23 @@
 import { UniV3Config, UniV3 } from "./uniswapV3";
 import { Erc20 } from "./erc20";
-import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey } from "./utils";
+import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey, DbInfo } from "./utils";
+import { Output } from "./output";
 
 export class RebalancePool {
     config: UniV3Config;
     erc20Cnt0: Erc20;
     erc20Cnt1: Erc20;
+    output: Output;
 
-    constructor(config: UniV3Config) {
+    constructor(config: UniV3Config, dbInfo: DbInfo) {
         this.config = config;
         this.erc20Cnt0 = new Erc20(config.token0, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
         this.erc20Cnt1 = new Erc20(config.token1, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+        this.output = new Output(dbInfo.host, dbInfo.port, dbInfo.user, dbInfo.password, dbInfo.database);
+    }
 
+    async intialize(){
+        await this.output.initialize();
     }
 
     async doHaveEnough(isbuy: boolean, price: number) {
@@ -19,7 +25,7 @@ export class RebalancePool {
             // set this to true for the time being because there is very little 
             // liquidity pool in the and the pool price is 10 ^ 40 vs a theo of 25
             return true;
-            
+
             const SAFETY_BUFFER = 1.2;
             let myBalance = isbuy ? (await this.erc20Cnt1.getMyBalance()) : (await this.erc20Cnt0.getMyBalance());
             let amtNeeded = (isbuy ? this.config.buyAmtToken0 * price : this.config.sellAmtToken0)
@@ -30,7 +36,7 @@ export class RebalancePool {
                 console.log(`You have ${myBalance} you need ${amtNeeded}`);
                 return false;
             }
-            
+
             return true;
         } catch (e) {
             console.log(`checkIfHaveEnough failed with error: ${e}`);
@@ -38,7 +44,7 @@ export class RebalancePool {
         }
     }
 
-    async doTrade(price: number, lastPlaceOrderTime: number) {
+    async canTrade(price: number, lastPlaceOrderTime: number) {
         let doBuy = false;
         let doSell = false;
         let theoPrice = await getTheoSlvtPrice();
@@ -99,7 +105,7 @@ export class RebalancePool {
             poolPrice = await uniV3.getPoolPrice();
             console.log(`pool price: ${poolPrice}, theoPrice: ${await getTheoSlvtPrice()}`);
             try {
-                const { doBuy, doSell } = await this.doTrade(await uniV3.getPoolPrice(), lastPlaceOrderTime);
+                const { doBuy, doSell } = await this.canTrade(await uniV3.getPoolPrice(), lastPlaceOrderTime);
                 if (doBuy || doSell) {
                     lastPlaceOrderTime = Date.now();
                     console.log(`would have done trade here, isbuy: ${doBuy}, pool price: ${await uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);

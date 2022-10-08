@@ -7,16 +7,18 @@
     "@truffle/hdwallet-provider": "^2.0.16",
     "dotenv": "^16.0.3",
     "jsbi": "^4.3.0",
+    "pg": "^8.8.0",
     "ts-node": "^10.9.1",
+    "ts-postgres": "^1.3.0",
     "web3": "^1.8.0"
   },
-  "scripts":{
-    "test":  "node dist/test/tests.js",
+  "scripts": {
+    "test": "node dist/test/tests.js",
     "sell": "node dist/src/runner.js sell",
     "buy": "node dist/src/runner.js buy",
     "rebalance": "node dist/src/runner.js",
     "build": "npx tsc --build",
-    "start": "node dist/src/runner.js"
+    "start": "node dist/test/tests.js"
   },
   "engines": {
     "node": "16.x"

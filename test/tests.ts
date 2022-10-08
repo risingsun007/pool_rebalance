@@ -1,7 +1,17 @@
 import { UniV3Config, UniV3 } from "../src/uniswapV3";
 import { Erc20 } from "../src/erc20";
-import { sleep, routerAddress, gweiToEth, getPrivateKey } from "../src/utils";
+import { sleep, routerAddress, gweiToEth, getPrivateKey, SWAPV3_EVENT_ABI, SWAP_EVENT_HASH, DbInfo } from "../src/utils";
+import { MyWeb3 } from "../src/myWeb3";
+import { RebalancePool } from "../src/rebalancePool";
 require('dotenv').config()
+
+const dbInfo: DbInfo = {
+    host: 'ec2-35-168-122-84.compute-1.amazonaws.com',
+    database: 'd7n4c14qsj9j4l',
+    user: 'aocgxqofjtdmyj',
+    port: 5432,
+    password: '577d15f32ed0c86dba14d3aadf5078cee7c74b235bb7a512b9e6c5323dee33d3'
+}
 
 const config: UniV3Config = {
     httpConnector: "https://goerli.infura.io/v3/96be6c20daf74b9093bc3c3db80f801d",
@@ -48,3 +58,18 @@ async function test() {
         console.log(`result: ${JSON.stringify(await uniV3.placeTrade(true))}`);
     }
 }
+
+async function getTransaction() {
+    const myWeb3 = new MyWeb3(config.httpConnector);
+    const doneTx = "0x34c61308aaf21a9cc6b124139bc44b40285314a16cc84db28da995946e821492";
+    const tx = await myWeb3.getLogs("0x34c61308aaf21a9cc6b124139bc44b40285314a16cc84db28da995946e821492");
+    console.log(`log: ${JSON.stringify(await myWeb3.getDecodeLogfromTxHash(tx, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI), null, 2)}`);
+}
+
+async function testRebalance() {
+    const rebalancePool = new RebalancePool(config, dbInfo);
+    await rebalancePool.intialize();
+    await sleep(1000000);
+}
+
+testRebalance()
