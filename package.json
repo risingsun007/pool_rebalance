@@ -18,7 +18,7 @@
     "buy": "node dist/src/runner.js buy",
     "rebalance": "node dist/src/runner.js",
     "build": "npx tsc --build",
-    "start": "node dist/test/tests.js"
+    "start": "node dist/src/runner.js"
   },
   "engines": {
     "node": "16.x"

@@ -1,35 +1,40 @@
 import { UniV3Config, UniV3 } from "../src/uniswapV3";
 import { Erc20 } from "../src/erc20";
-import { sleep, routerAddress, gweiToEth, getPrivateKey, SWAPV3_EVENT_ABI, SWAP_EVENT_HASH, DbInfo } from "../src/utils";
-import { MyWeb3 } from "../src/myWeb3";
+import { sleep, routerAddress, gweiToEth, getPrivateKey, SWAPV3_EVENT_ABI, SWAP_EVENT_HASH, getEnv, TradeConfig } from "../src/utils";
+import { Web3Wrapper } from "../src/web3Wrapper";
 import { RebalancePool } from "../src/rebalancePool";
 require('dotenv').config()
 
-const dbInfo: DbInfo = {
-    host: 'ec2-35-168-122-84.compute-1.amazonaws.com',
-    database: 'd7n4c14qsj9j4l',
-    user: 'aocgxqofjtdmyj',
-    port: 5432,
-    password: '577d15f32ed0c86dba14d3aadf5078cee7c74b235bb7a512b9e6c5323dee33d3'
+// test rebalance on Goerli test net  https://goerli.etherscan.io/ 
+
+const useDb = true;
+
+const DATABASE_URL: string = getEnv('DATABASE_URL');
+console.log(`databaseURL: ${DATABASE_URL}`);
+
+const tradeConfig: TradeConfig = {
+    targetSellPrct: 110,
+    targetBuyPrct: 90,
+    minMillSecBetweenTrades: 120000,
+    sleepTimeMillSec: 100000,
+    maxNumErrors: 5, // the program will exit when the number of error has been reached
+    maxNumTrades: 5, // the program will exit when this number of trades has been sent
+    doMakeTrades: true
 }
 
 const config: UniV3Config = {
-    httpConnector: "https://goerli.infura.io/v3/96be6c20daf74b9093bc3c3db80f801d",
+    httpConnector: getEnv('TESTNET_URL'),
     token0: "0x7144Cd6Cca5e45Ca071190E88E0E85228200Fa27", // WETH on Goerli
     token1: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6", // random token Address
     // pool address is  0x61975B078473Ec6dDcEfd80b2Ab8E57cC78222F7
     tokenDec0: 18,
     tokenDec1: 18,
-    buyAmtToken0: .01 * 10 ** 18,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
-    sellAmtToken0: .01 * 10 ** 18,
-    targetSellPrct: 110,
-    targetBuyPrct: 90,
-    minMillSecBetweenTrades: 30000,
-    sleepTimeMillSec: 10000,
+    buyAmtToken0: .00001 * 10 ** 18,  //the buy and sell amts are in smallest increments of SLT 10 ^ 8 = 1 SLVT
+    sellAmtToken0: .0000001 * 10 ** 18,
     feeLevel: 10000, //3000 = .3%
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9
     maxFeePerGas: gweiToEth(50),
-    maxTradeSlippage: 1.15, // 1.15 = you will pay up to 15% more than current prc or trade reverts
+    maxTradeSlippage: 2, // 1.15 = you will pay up to 15% more than current prc or trade reverts
     privateKey: getPrivateKey(),
 }
 
@@ -60,15 +65,16 @@ async function test() {
 }
 
 async function getTransaction() {
-    const myWeb3 = new MyWeb3(config.httpConnector);
+    const myWeb3 = new Web3Wrapper(config.httpConnector);
     const doneTx = "0x34c61308aaf21a9cc6b124139bc44b40285314a16cc84db28da995946e821492";
     const tx = await myWeb3.getLogs("0x34c61308aaf21a9cc6b124139bc44b40285314a16cc84db28da995946e821492");
     console.log(`log: ${JSON.stringify(await myWeb3.getDecodeLogfromTxHash(tx, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI), null, 2)}`);
 }
 
 async function testRebalance() {
-    const rebalancePool = new RebalancePool(config, dbInfo);
+    const rebalancePool = new RebalancePool(tradeConfig, config, DATABASE_URL, useDb);
     await rebalancePool.intialize();
+    await rebalancePool.reBalance();
     await sleep(1000000);
 }
 

@@ -12,6 +12,16 @@ export interface DbInfo {
     password: string
 };
 
+export interface TradeConfig {
+    targetSellPrct: number;
+    targetBuyPrct: number;
+    minMillSecBetweenTrades: number;
+    sleepTimeMillSec: number;
+    maxNumErrors: number;
+    maxNumTrades: number;
+    doMakeTrades: boolean; 
+}
+
 export const SWAPV3_EVENT_ABI = [{
     type: 'uint256',
     name: 'eventHash',
@@ -32,7 +42,7 @@ export const SWAPV3_EVENT_ABI = [{
     name: 'amount1'
 }, {
     type: 'uint160',
-    name: ' sqrtPriceX96'
+    name: 'sqrtPriceX96'
 }, {
     type: 'uint128',
     name: 'liquidity',
@@ -113,7 +123,6 @@ export function noExp(input: any) {
 
 export function getPrivateKey() {
     if (process.env['PRIVATE_KEY']) {
-        console.log("set private key from environmental variable");
         return process.env['PRIVATE_KEY'];
     } else {
         //console.log("get private key from .env ");
@@ -144,10 +153,12 @@ export function getHttpConnector() {
     }
 }
 
-export function getEnv(x: string) : string {
-    if (x in process.env ) {
+export function getEnv(x: string): string {
+    if (x in process.env) {
         return process.env[x] || "";
     } else {
+        console.log(`Did not find environmental variable ${x}`);
+        console.log(`Please define ${x}`);
         return "";
     }
 }

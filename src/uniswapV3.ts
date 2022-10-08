@@ -3,11 +3,13 @@ const routerV3Abi = require("../../abi/routerV3.json");
 const factoryV3Abi = require("../../abi/factoryV3.json");
 const Web3 = require('web3');
 const JSBI = require('jsbi');
-import { TxInfo, noExp, MIN_TICK_RATIO, trimHex } from "./utils";
+import { Output } from "./output";
+import { TxInfo, noExp, MIN_TICK_RATIO, trimHex, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI, Swap } from "./utils";
+import { Web3Wrapper } from "./web3Wrapper";
+const Provider = require('@truffle/hdwallet-provider');
 //const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8"; SLVT/USDC 1% pool
 const ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 const FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
-const Provider = require('@truffle/hdwallet-provider');
 
 export interface UniV3Config {
     httpConnector: string,
@@ -18,10 +20,6 @@ export interface UniV3Config {
     buyAmtToken0: number;
     sellAmtToken0: number;
     privateKey: string;
-    targetSellPrct: number;
-    targetBuyPrct: number;
-    minMillSecBetweenTrades: number;
-    sleepTimeMillSec: number;
     feeLevel: number;
     maxPriorityFeePerGas: number;
     maxFeePerGas: number;
@@ -34,6 +32,8 @@ export class UniV3 {
     config: UniV3Config;
     myAddress: string;
     swapRouter: any;
+    web3Wrapper: Web3Wrapper;
+    poolAddress: string = "";
 
     constructor(config1: UniV3Config) {
         this.web3 = new Web3(new Provider(trimHex(config1.privateKey), config1.httpConnector));
@@ -41,17 +41,18 @@ export class UniV3 {
         this.swapRouter = new this.web3.eth.Contract(routerV3Abi, ROUTER_ADDRESS);
         this.config = config1;
         this.myAddress = this.web3.eth.accounts.privateKeyToAccount(config1.privateKey).address;
+        this.web3Wrapper = new Web3Wrapper(this.myAddress);
     }
 
     async initialize() {
         const factoryV3 = new this.web3.eth.Contract(factoryV3Abi, FACTORY_ADDRESS);
-        let poolAddress = await factoryV3.methods.getPool(this.config.token0, this.config.token1, this.config.feeLevel).call();
-        console.log(`poolAddress: ${JSON.stringify(poolAddress)}`)
-        if (parseInt(poolAddress, 16) === 0) {
+        this.poolAddress = await factoryV3.methods.getPool(this.config.token0, this.config.token1, this.config.feeLevel).call();
+        console.log(`poolAddress: ${JSON.stringify(this.poolAddress)}`)
+        if (parseInt(this.poolAddress, 16) === 0) {
             console.log(`Pool address not found for UniswapV3 factory with token0: ${this.config.token0}, token1: ${this.config.token1}\
             feeLevel: ${this.config.feeLevel}`);
         }
-        this.poolV3 = new this.web3.eth.Contract(poolV3Abi, poolAddress);
+        this.poolV3 = new this.web3.eth.Contract(poolV3Abi, this.poolAddress);
     }
 
     async getPoolPrice(): Promise<number> {
@@ -95,7 +96,6 @@ export class UniV3 {
 
     private async buyToken0() {
         await this.getPoolPrice();
-        console.log('fffffff');
         const zzz = ((await this.getPoolPrice()));
         const fff = 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage;
         console.log(`attempting buy token: ${zzz}`);
@@ -139,12 +139,47 @@ export class UniV3 {
         return await this.swapRouter.methods.exactInputSingle(data).send(this.getTxParams());
     }
 
-    async placeTrade(doBuyToken0: boolean, unlimitedImpact: boolean = false) {
-        if (doBuyToken0) {
-            return this.buyToken0();
-        } else {
-            return this.sellToken0(unlimitedImpact);
+    parseSwapOutput(result: any) {
+        if (!result || result instanceof Error || typeof (result) !== 'object') {
+            console.log("result not parseable");
+            return result;
         }
+
+        if (result.events) {
+            const data = this.web3Wrapper.getDecodeLogfromEvents(result, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI);
+            if (data && data.liquidity) {
+                const amount0 = Number(data.amount0) / this.config.tokenDec0 * -1.0;
+                const amount1 = Number(data.amount1) / this.config.tokenDec1 * -1;
+                let swap: Swap = {
+                    time: Date.now(),
+                    amount0,
+                    amount1,
+                    sqrtPriceX96: Number(data.sqrtPriceX96),
+                    liquidity: Number(data.liquidity),
+                    tick: Number(data.tick),
+                    token0: this.config.token0,
+                    token1: this.config.token1,
+                    hash: result.transactionHash,
+                    blockNumber: result.blockNumber,
+                    pool: this.poolAddress,
+                    price: Math.abs(amount1) / Math.abs(amount0)
+                }
+                return swap;
+            } else {
+                console.log("didn't find data")
+            }
+        }
+    }
+
+    async placeTrade(doBuyToken0: boolean, unlimitedImpact: boolean = false) {
+        console.log("placing trade");
+        let result;
+        if (doBuyToken0) {
+            result = await this.buyToken0();
+        } else {
+            result = await this.sellToken0(unlimitedImpact);
+        }
+        return this.parseSwapOutput(result);
     }
 }
 
