@@ -6,7 +6,7 @@ export class Output {
 
     constructor(host: string, port: number, user: string, password: string, database: string) {
         console.log(`${host}, ${port}, ${user}, ${password}, ${database}`);
-        this.client = new Client({ host, port, user, password, database, ssl: true });
+        this.client = new Client({ host, port, user, password, database });
 
     }
 
