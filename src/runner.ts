@@ -1,18 +1,18 @@
 import { UniV3Config, UniV3 } from "./uniswapV3";
-import { gweiToEth, getPrivateKey, getHttpConnector, DbInfo } from "./utils";
+import { gweiToEth, getPrivateKey, getHttpConnector, DbInfo, getEnv } from "./utils";
 import { RebalancePool } from "./rebalancePool";
 
 const dbInfo: DbInfo = {
-    host: 'ec2-35-168-122-84.compute-1.amazonaws.com',
-    database: 'd7n4c14qsj9j4l',
-    user: 'aocgxqofjtdmyj',
+    host: getEnv('Host'),
+    database: getEnv('Database'),
+    user: getEnv('User'),
     port: 5432,
-    password: '577d15f32ed0c86dba14d3aadf5078cee7c74b235bb7a512b9e6c5323dee33d3'
+    password:  getEnv('Password')
 }
 
 // These config variables determine how to program functions
 const config: UniV3Config = {
-    httpConnector: getHttpConnector(), //"https://mainnet.infura.io/v3/96be6c20daf74b9093bc3c3db80f801d",
+    httpConnector: getHttpConnector(),
     token0: "0x652594082f97392a1703D80985Ab575085f34a4e", // SLVT token Address
     token1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC token Address
     tokenDec0: 8,

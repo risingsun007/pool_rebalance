@@ -136,10 +136,17 @@ export async function getTheoSlvtPrice() {
     }
 }
 
-
 export function getHttpConnector() {
     if (process.env['HTTP_CONNECTOR']) {
         return process.env['HTTP_CONNECTOR'];
+    } else {
+        return "";
+    }
+}
+
+export function getEnv(x: string) : string {
+    if (x in process.env ) {
+        return process.env[x] || "";
     } else {
         return "";
     }
