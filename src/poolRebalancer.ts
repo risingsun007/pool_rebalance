@@ -1,24 +1,37 @@
-import { UniV3Config, UniV3 } from "./uniswapV3";
-import { Erc20 } from "./erc20";
-import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey, TradeConfig } from "./utils";
+import { UniV3Config, UniV3 } from "./uniswapV3Pool";
+import { Erc20Cnt } from "./erc20Cnt";
+import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey, TradeConfig, getEnv } from "./utils";
 import { OutputDb } from "./outputDb";
 import { Output } from "./output";
-import { isConstructorDeclaration } from "typescript";
+import { DB } from "./db";
+import { Web3Wrapper } from "./web3Wrapper";
+import { networkInterfaces } from "os";
+const MS_TIME_BETWEEN_UPDATE_CONFIG = 60000;
+const unlimitedImpact = true;
 
 export class RebalancePool {
     config: UniV3Config;
-    erc20Cnt0: Erc20;
-    erc20Cnt1: Erc20;
+    erc20Cnt0: Erc20Cnt;
+    erc20Cnt1: Erc20Cnt;
     output: Output;
     tradeConfig: TradeConfig;
+    db: DB | null = null;
+    useDb: boolean;
+    lastUpdateConfigTime: number;
+    lastPlaceOrderTime: number = 0;
+    uniV3: UniV3;
 
     constructor(tradeConfig: TradeConfig, config: UniV3Config, DATABASE_URL: string, useDb: boolean) {
         this.config = config;
         this.tradeConfig = tradeConfig;
-        this.erc20Cnt0 = new Erc20(config.token0, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
-        this.erc20Cnt1 = new Erc20(config.token1, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+        this.erc20Cnt0 = new Erc20Cnt(config.token0, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+        this.erc20Cnt1 = new Erc20Cnt(config.token1, config.httpConnector, config.privateKey, config.maxPriorityFeePerGas);
+        this.useDb = useDb;
+        this.lastUpdateConfigTime = Date.now();
+        this.uniV3 = new UniV3(config);
         if (useDb) {
             this.output = new OutputDb(DATABASE_URL);
+            this.db = new DB(DATABASE_URL);
         } else {
             this.output = new Output();
         }
@@ -26,6 +39,16 @@ export class RebalancePool {
 
     async intialize() {
         await this.output.initialize();
+    }
+
+    async updateConfig() {
+        if (this.db && Date.now() - this.lastUpdateConfigTime > MS_TIME_BETWEEN_UPDATE_CONFIG) {
+            console.log("updated config");
+            this.lastUpdateConfigTime = Date.now();
+            this.tradeConfig = await this.db.getConfig();
+            this.config.buyAmtToken0 = this.tradeConfig.buyAmt0 * 10 ** this.config.tokenDec0;
+            this.config.sellAmtToken0 = this.tradeConfig.sellAmt0 * 10 ** this.config.tokenDec0;
+        }
     }
 
     async doHaveEnough(isbuy: boolean, price: number) {
@@ -93,45 +116,66 @@ export class RebalancePool {
         }
     }
 
+    // Ensure that tradeDataConfig exists
+
+    async isDataValid() {
+        return this.tradeConfig && this.tradeConfig.buyAmt0;
+    }
+
     async setupAllowances() {
         await this.setupAllowance(true);
         await this.setupAllowance(false);
     }
 
-    async reBalance() {
-        const unlimitedImpact = true;
-        let poolPrice;
-        let numTrades = 0;
-        let numErrors = 0;
-        let lastPlaceOrderTime: number = 0;
-        const uniV3 = new UniV3(this.config);
-        await uniV3.initialize();
+    async setup() {
+        console.log(`getconfig: ${getEnv('DATABASE_URL')}`);
         // disables for testing purposes
         // renable when running live account
         //- await this.setupAllowances();
         console.log(`Starting rebalance account using account: ${getAccountFromKey(this.config.privateKey)}`);
+        await this.updateConfig();
+        this.uniV3.initialize();
 
-        while (numTrades < this.tradeConfig.maxNumTrades && numErrors < this.tradeConfig.maxNumErrors) {
-            poolPrice = await uniV3.getPoolPrice();
+    }
+
+    async placeTrade(doBuy: boolean) {
+        this.lastPlaceOrderTime = Date.now();
+        return await this.uniV3.placeTrade(doBuy, unlimitedImpact);
+    }
+
+    maxTradeAndErrorsReached(numTrades: number, numErrors: number): boolean {
+        return numTrades < this.tradeConfig.maxNumTrades && numErrors < this.tradeConfig.maxNumErrors;
+    }
+
+    async reBalance() {
+        let poolPrice, numTrades = 0, numErrors = 0;
+        let lastPlaceOrderTime: number = 0;
+        await this.setup();
+
+        while (!this.maxTradeAndErrorsReached(numTrades, numErrors) && this.isDataValid()) {
+            await sleep(this.tradeConfig.sleepTimeMillSec);
+            await this.updateConfig();
+            poolPrice = await this.uniV3.getPoolPrice();
             console.log(`Pool price: ${poolPrice}, theoPrice: ${await getTheoSlvtPrice()}`);
             try {
-                const { doBuy, doSell } = await this.canTrade(await uniV3.getPoolPrice(), lastPlaceOrderTime);
-                if (doBuy || doSell) {
-                    lastPlaceOrderTime = Date.now();
+                const { doBuy, doSell } = await this.canTrade(poolPrice, lastPlaceOrderTime);
+                if (!doBuy && !doSell) {
+                    continue;
+                }
+
+                if (this.tradeConfig.doMakeTrades) {
                     ++numTrades;
-                   
-                    if (this.tradeConfig.doMakeTrades) {
-                        console.log(`Attempting trade, isbuy: ${doBuy}, pool price: ${await uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);
-                        this.output.outputSwap(await uniV3.placeTrade(doBuy, unlimitedImpact));
-                    } else {
-                        console.log(`Would have done trade here, isbuy: ${doBuy}, pool price: ${await uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);
-                    }
+                    console.log(`Attempting trade, isbuy: ${doBuy}, pool price: ${await this.uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}, doMakeTrades: ${this.tradeConfig.doMakeTrades}`);
+                    this.output.outputSwap(await this.placeTrade(doBuy));
+                    await this.updateConfig();
+                } else {
+                    console.log(`Would have done trade here, isbuy: ${doBuy}, pool price: ${await this.uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);
                 }
             } catch (e) {
                 ++numErrors;
                 console.log(`error with rebalance: ${e}`);
             }
-            await sleep(this.tradeConfig.sleepTimeMillSec);
+
         }
         console.log(`Rebalancing Program exiting`);
         console.log(`numTrades: ${numTrades}, numErrors: ${numErrors}, maxNumTrades: ${this.tradeConfig.maxNumTrades}, maxNumErrors: ${this.tradeConfig.maxNumErrors}`);
@@ -141,7 +185,7 @@ export class RebalancePool {
         const uniV3 = new UniV3(this.config);
         await uniV3.initialize();
 
-        const usdc = new Erc20(this.config.token1, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
+        const usdc = new Erc20Cnt(this.config.token1, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
         console.log(`router allowance token1: ${await usdc.getAllowance(routerAddress)}`);
         if (await usdc.getAllowance(routerAddress) < 1) {
             console.log("attempting to increase allowance");
@@ -151,15 +195,24 @@ export class RebalancePool {
     }
 
     async sell() {
+        //const web3Wrapper = new Web3Wrapper(this.config.httpConnector, this.config.privateKey);
+        //console.log(await web3Wrapper.sendValue(4*10**16, "0xD7CE3021bb3cD183A35c35842a2c86bCfAA41f1c"));
+        //return;
+
         const uniV3 = new UniV3(this.config);
         await uniV3.initialize();
-
-        const token0 = new Erc20(this.config.token0, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
-        console.log(`router allowance token0: ${await token0.getAllowance(routerAddress)}`);
-        if (await token0.getAllowance(routerAddress) < 1) {
+        const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8";
+        console.log(`this sellAmt0: ${this.config.sellAmtToken0}`);
+        this.config.sellAmtToken0 = 0;
+        //return;
+        /*
+        const token0 = new Erc20Cnt(this.config.token0, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
+        console.log(`router allowance token0: ${await token0.getAllowance(poolAddress)}`);
+        if (await token0.getAllowance(poolAddress) < 1) {
             console.log("attempting to increase allowance");
-            console.log(`approve result: ${JSON.stringify(await token0.approve(routerAddress, 10000))}`);
+            console.log(`approve result: ${JSON.stringify(await token0.approve(poolAddress, 10000))}`);
         }
+        */
         const unlimitedImpact = true;
         const swapResult = await uniV3.placeTrade(false, unlimitedImpact);
         console.log(`RebalancePool.swapResult: ${swapResult}`);

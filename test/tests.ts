@@ -1,8 +1,8 @@
-import { UniV3Config, UniV3 } from "../src/uniswapV3";
-import { Erc20 } from "../src/erc20";
+import { UniV3Config, UniV3 } from "../src/uniswapV3Pool";
+import { Erc20Cnt } from "../src/erc20Cnt";
 import { sleep, routerAddress, gweiToEth, getPrivateKey, SWAPV3_EVENT_ABI, SWAP_EVENT_HASH, getEnv, TradeConfig } from "../src/utils";
 import { Web3Wrapper } from "../src/web3Wrapper";
-import { RebalancePool } from "../src/rebalancePool";
+import { RebalancePool } from "../src/poolRebalancer";
 require('dotenv').config()
 
 // test rebalance on Goerli test net  https://goerli.etherscan.io/ 
@@ -19,7 +19,9 @@ const tradeConfig: TradeConfig = {
     sleepTimeMillSec: 100000,
     maxNumErrors: 5, // the program will exit when the number of error has been reached
     maxNumTrades: 5, // the program will exit when this number of trades has been sent
-    doMakeTrades: true
+    doMakeTrades: false,
+    buyAmt0: 0,// define this from a database
+    sellAmt0: 0,// define this from a database
 }
 
 const config: UniV3Config = {
@@ -34,13 +36,13 @@ const config: UniV3Config = {
     feeLevel: 10000, //3000 = .3%
     maxPriorityFeePerGas: gweiToEth(3), // 1 gwei = 10 ** 9
     maxFeePerGas: gweiToEth(50),
-    maxTradeSlippage: 2, // 1.15 = you will pay up to 15% more than current prc or trade reverts
+    maxTradeSlippage: 3, // 1.15 = you will pay up to 15% more than current prc or trade reverts
     privateKey: getPrivateKey(),
 }
 
 async function test() {
     //sell WETH for other token, then sell other token
-    const weth = new Erc20(config.token0, config.httpConnector, config.privateKey, gweiToEth(3));
+    const weth = new Erc20Cnt(config.token0, config.httpConnector, config.privateKey, gweiToEth(3));
     const uniV3 = new UniV3(config);
     await weth.initialize();
     await uniV3.initialize();
@@ -57,7 +59,7 @@ async function test() {
     }
     console.log(`result: ${JSON.stringify(await uniV3.placeTrade(false))}`);
 
-    const token1 = new Erc20(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
+    const token1 = new Erc20Cnt(config.token1, config.httpConnector, config.privateKey, gweiToEth(3));
     const balanceT1 = await token1.getMyBalance();
     if (balanceT1) {
         console.log(`result: ${JSON.stringify(await uniV3.placeTrade(true))}`);

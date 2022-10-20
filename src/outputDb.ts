@@ -4,10 +4,10 @@ import { Output } from './output';
 export class OutputDb extends Output {
     client: typeof Client;
 
-    constructor(databaseUrl: string) {
+    constructor(connectionString: string) {
         super();
         this.client = new Client({
-            connectionString: databaseUrl,
+            connectionString,
             ssl: {
                 rejectUnauthorized: false,
             }

@@ -19,7 +19,9 @@ export interface TradeConfig {
     sleepTimeMillSec: number;
     maxNumErrors: number;
     maxNumTrades: number;
-    doMakeTrades: boolean; 
+    doMakeTrades: boolean;
+    buyAmt0: number;
+    sellAmt0: number;
 }
 
 export const SWAPV3_EVENT_ABI = [{
@@ -83,7 +85,8 @@ export interface TxInfo {
     gas: number,
     maxPriorityFeePerGas: number,
     maxFeePerGas: number,
-    value?: string,
+    value?:  string,
+    to?: string,
 }
 
 export function sleep(time: number) {
@@ -163,3 +166,29 @@ export function getEnv(x: string): string {
     }
 }
 
+function snakeToCamel(str: any) {
+    return str.toLowerCase().replace(/([-_][a-z])/g, (x: any) =>
+        x.toUpperCase()
+            .replace('-', '')
+            .replace('_', '')
+    )
+}
+
+export function changeKeyName(obj: any, from: string, to: string) {
+    console.log(`zzz = ${to}`);
+    Object.keys(obj).forEach((y: any) => {
+        if(y===from){
+            obj[to] = obj[from];
+            delete obj[from];
+            return;
+        }
+    });
+}
+
+export function snakeToCamelJson(x: any) {
+    Object.keys(x).forEach((y: any) => {
+        console.log(snakeToCamel(y))
+        x[snakeToCamel(y)] = x[y];
+        delete x[y];
+    });
+}

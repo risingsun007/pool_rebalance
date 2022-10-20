@@ -4,11 +4,11 @@ const factoryV3Abi = require("../../abi/factoryV3.json");
 const Web3 = require('web3');
 const JSBI = require('jsbi');
 import { Output } from "./output";
-import { TxInfo, noExp, MIN_TICK_RATIO, trimHex, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI, Swap } from "./utils";
+import { TxInfo, noExp, MIN_TICK_RATIO, trimHex, SWAP_EVENT_HASH, SWAPV3_EVENT_ABI, Swap, routerAddress } from "./utils";
 import { Web3Wrapper } from "./web3Wrapper";
 const Provider = require('@truffle/hdwallet-provider');
 //const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8"; SLVT/USDC 1% pool
-const ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+const ROUTER_ADDRESS = /*"0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";*/"0xE592427A0AEce92De3Edee1F18E0157C05861564";
 const FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
 
 export interface UniV3Config {
@@ -86,57 +86,80 @@ export class UniV3 {
     private getTxParams(): TxInfo {
         return {
             from: this.myAddress,
-            gas: 300000,
-            maxPriorityFeePerGas: this.config.maxPriorityFeePerGas,
-            maxFeePerGas: this.config.maxFeePerGas,
+            gas: 150000,
+            maxPriorityFeePerGas: 3 * 10 ** 9,//this.config.maxPriorityFeePerGas,
+            maxFeePerGas: 100 * 10 ** 9,//this.config.maxFeePerGas,
+            to: routerAddress,
+            value: "0"
         }
     }
 
     // Buy an exact amount of Token0
 
     private async buyToken0() {
-        await this.getPoolPrice();
-        const zzz = ((await this.getPoolPrice()));
-        const fff = 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage;
-        console.log(`attempting buy token: ${zzz}`);
-        console.log(`pool price: ${await this.getPoolPrice()}`);
+        try {
+            await this.getPoolPrice();
+            const zzz = ((await this.getPoolPrice()));
+            const fff = 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage;
+            console.log(`attempting buy token: ${zzz}`);
+            console.log(`pool price: ${await this.getPoolPrice()}`);
 
-        const data = [
-            this.config.token1,     // tokenIn
-            this.config.token0,     // tokenOut
-            this.config.feeLevel,   // fee
-            this.myAddress,         // receipient
-            Date.now() + 120000,    // deadline
-            noExp(this.config.buyAmtToken0),     // amountOut
-            noExp(this.config.buyAmtToken0 * (await this.getPoolPrice())
-                * 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage), // amountInMaximum
-            noExp((await this.getSqrtPriceX96Decimal()) * this.config.maxTradeSlippage) // sqrtPriceLimitX96
-        ];
-        console.log(`buyToken0 data: ${JSON.stringify(data)}`);
-        return await this.swapRouter.methods.exactOutputSingle(data).send(this.getTxParams());
+            const data = [
+                this.config.token0,     // tokenIn
+                this.config.token1,     // tokenOut
+                this.config.feeLevel,   // fee
+                this.myAddress,         // receipient
+                //Date.now() + 120000,    // deadline
+                10000/*noExp(this.config.buyAmtToken0)*/,     // amountOut
+                10000
+                /*noExp(this.config.buyAmtToken0 * (await this.getPoolPrice())
+                    * 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage)*/, // amountInMaximum
+                    MIN_TICK_RATIO + 1000
+                    //noExp((await this.getSqrtPriceX96Decimal()) * this.config.maxTradeSlippage) // sqrtPriceLimitX96
+            ];
+            console.log(`buyToken0 data: ${JSON.stringify(data)}`);
+            return await this.swapRouter.methods.exactOutputSingle(data).call(this.getTxParams());
+        } catch (e) {
+            console.log(`buyToken0 failed with error: ${JSON.stringify(e)}`);
+        }
     }
 
     // Sell an exact amount of Token0
 
     private async sellToken0(unlimitedImpact: boolean = false) {
-        const data = [
-            this.config.token0,     // tokenIn
-            this.config.token1,     // tokenOut
-            this.config.feeLevel,   // fee
-            this.myAddress,         // receipient
-            Date.now() + 120000,    // deadline
-            noExp(this.config.sellAmtToken0),     // amountIn
-            noExp(this.config.sellAmtToken0 * (await this.getPoolPrice()) * 10
-                ** (this.config.tokenDec1 - this.config.tokenDec0) / this.config.maxTradeSlippage),  // amountOutMinimum
-            noExp(Number(await this.getSqrtPriceX96Decimal()) / this.config.maxTradeSlippage), // sqrtPriceLimitX96
-        ];
-        if (unlimitedImpact) {
-            data[6] = 0;
-            data[7] = MIN_TICK_RATIO + 1000;
-        }
+        try {
+            this.config.sellAmtToken0 = 10;
+            const data = [
+                this.config.token0,     // tokenIn
+                this.config.token1,     // tokenOut
+                this.config.feeLevel,   // fee
+                this.myAddress,         // receipient
+                Date.now() + 120000,    // deadline
+                noExp(this.config.sellAmtToken0),     // amountIn
+                noExp(this.config.sellAmtToken0 * (await this.getPoolPrice()) * 10
+                    ** (this.config.tokenDec1 - this.config.tokenDec0) / this.config.maxTradeSlippage),  // amountOutMinimum
+                noExp(Number(await this.getSqrtPriceX96Decimal()) / this.config.maxTradeSlippage), // sqrtPriceLimitX96
+            ];
+            if (unlimitedImpact) {
+                data[6] = 0;
+                data[7] = MIN_TICK_RATIO + 1000;
+            }
 
-        console.log(`attempting to sellToken0, data: ${JSON.stringify(data)}`);
-        return await this.swapRouter.methods.exactInputSingle(data).send(this.getTxParams());
+            const data2 = [
+                1000,     // tokenIn
+                0,
+                [this.config.token0, this.config.token1],
+                this.myAddress
+            ]
+
+            // const nnnn = await this.swapRouter.methods.swapExactTokensForTokens(1000,0, [this.config.token0,this.config.token1], this.myAddress).call(this.getTxParams());
+            console.log(`attempting to sellToken0, data: ${JSON.stringify(data)}`);
+            console.log(`data: ${JSON.stringify(this.swapRouter.methods.exactInputSingle(data).encodeABI(), null, 2)}}`)
+           // console.log(`try to swap: ${await this.swapRouter.methods.exactInputSingle(data).call(this.getTxParams())}`);
+            return await this.swapRouter.methods.exactInputSingle(data).send(this.getTxParams());
+        } catch (e) {
+            console.log(`error: ${JSON.stringify(e, null, 2)}`);
+        }
     }
 
     parseSwapOutput(result: any) {
