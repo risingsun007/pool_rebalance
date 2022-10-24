@@ -86,9 +86,9 @@ export class UniV3 {
     private getTxParams(): TxInfo {
         return {
             from: this.myAddress,
-            gas: 150000,
+            gas: 550000,
             maxPriorityFeePerGas: 3 * 10 ** 9,//this.config.maxPriorityFeePerGas,
-            maxFeePerGas: 100 * 10 ** 9,//this.config.maxFeePerGas,
+            maxFeePerGas: 60 * 10 ** 9,//this.config.maxFeePerGas,
             to: routerAddress,
             value: "0"
         }
@@ -114,8 +114,8 @@ export class UniV3 {
                 10000
                 /*noExp(this.config.buyAmtToken0 * (await this.getPoolPrice())
                     * 10 ** (this.config.tokenDec1 - this.config.tokenDec0) * this.config.maxTradeSlippage)*/, // amountInMaximum
-                    MIN_TICK_RATIO + 1000
-                    //noExp((await this.getSqrtPriceX96Decimal()) * this.config.maxTradeSlippage) // sqrtPriceLimitX96
+                MIN_TICK_RATIO + 1000
+                //noExp((await this.getSqrtPriceX96Decimal()) * this.config.maxTradeSlippage) // sqrtPriceLimitX96
             ];
             console.log(`buyToken0 data: ${JSON.stringify(data)}`);
             return await this.swapRouter.methods.exactOutputSingle(data).call(this.getTxParams());
@@ -152,11 +152,9 @@ export class UniV3 {
                 this.myAddress
             ]
 
-            // const nnnn = await this.swapRouter.methods.swapExactTokensForTokens(1000,0, [this.config.token0,this.config.token1], this.myAddress).call(this.getTxParams());
             console.log(`attempting to sellToken0, data: ${JSON.stringify(data)}`);
             console.log(`data: ${JSON.stringify(this.swapRouter.methods.exactInputSingle(data).encodeABI(), null, 2)}}`)
-           // console.log(`try to swap: ${await this.swapRouter.methods.exactInputSingle(data).call(this.getTxParams())}`);
-            return await this.swapRouter.methods.exactInputSingle(data).send(this.getTxParams());
+            return await this.swapRouter.methods.exactInputSingle(data).call(this.getTxParams());
         } catch (e) {
             console.log(`error: ${JSON.stringify(e, null, 2)}`);
         }

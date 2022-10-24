@@ -149,11 +149,7 @@ export async function getTheoSlvtPrice() {
 }
 
 export function getHttpConnector() {
-    if (process.env['HTTP_CONNECTOR']) {
-        return process.env['HTTP_CONNECTOR'];
-    } else {
-        return "";
-    }
+    return getEnv('HTTP_CONNECTOR');
 }
 
 export function getEnv(x: string): string {
