@@ -1,7 +1,5 @@
 const { Pool, Client } = require("pg");
 import { snakeToCamelJson, Swap, TradeConfig, changeKeyName } from "./utils";
-import { Output } from './output';
-import { resourceLimits } from "worker_threads";
 
 export class DB {
     client: typeof Client;

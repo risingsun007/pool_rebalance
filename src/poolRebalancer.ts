@@ -4,8 +4,6 @@ import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey, T
 import { OutputDb } from "./outputDb";
 import { Output } from "./output";
 import { DB } from "./db";
-import { Web3Wrapper } from "./web3Wrapper";
-import { networkInterfaces } from "os";
 const MS_TIME_BETWEEN_UPDATE_CONFIG = 60000;
 const unlimitedImpact = true;
 
@@ -195,24 +193,11 @@ export class RebalancePool {
     }
 
     async sell() {
-        //const web3Wrapper = new Web3Wrapper(this.config.httpConnector, this.config.privateKey);
-        //console.log(await web3Wrapper.sendValue(4*10**16, "0xD7CE3021bb3cD183A35c35842a2c86bCfAA41f1c"));
-        //return;
-
         const uniV3 = new UniV3(this.config);
         await uniV3.initialize();
         const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8";
         console.log(`this sellAmt0: ${this.config.sellAmtToken0}`);
         this.config.sellAmtToken0 = 0;
-        //return;
-        /*
-        const token0 = new Erc20Cnt(this.config.token0, this.config.httpConnector, this.config.privateKey, gweiToEth(3));
-        console.log(`router allowance token0: ${await token0.getAllowance(poolAddress)}`);
-        if (await token0.getAllowance(poolAddress) < 1) {
-            console.log("attempting to increase allowance");
-            console.log(`approve result: ${JSON.stringify(await token0.approve(poolAddress, 10000))}`);
-        }
-        */
         const unlimitedImpact = true;
         const swapResult = await uniV3.placeTrade(false, unlimitedImpact);
         console.log(`RebalancePool.swapResult: ${swapResult}`);
