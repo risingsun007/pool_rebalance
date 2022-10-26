@@ -92,8 +92,8 @@ export class RebalancePool {
 
         try {
             return {
-                doBuy: (price / theoPrice < this.tradeConfig.targetBuyPrct && (await this.doHaveEnough(true, price))),
-                doSell: price / theoPrice > this.tradeConfig.targetSellPrct && (await this.doHaveEnough(false, price))
+                doBuy: (price / theoPrice < this.tradeConfig.targetBuyPrct/100 && (await this.doHaveEnough(true, price))),
+                doSell: price / theoPrice > this.tradeConfig.targetSellPrct/100 && (await this.doHaveEnough(false, price))
             };
         } catch (e) {
             console.log(`doTrade error: ${e}`);
@@ -165,11 +165,11 @@ export class RebalancePool {
 
                 if (this.tradeConfig.doMakeTrades) {
                     ++numTrades;
-                    console.log(`Attempting trade, isbuy: ${doBuy}, pool price: ${await this.uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}, doMakeTrades: ${this.tradeConfig.doMakeTrades}`);
+                    console.log(`Attempting trade, isbuy: ${doBuy}, pool price: ${poolPrice} theoprice: ${await getTheoSlvtPrice()}, doMakeTrades: ${this.tradeConfig.doMakeTrades}`);
                     this.output.outputSwap(await this.placeTrade(doBuy));
                     await this.updateConfig();
                 } else {
-                    console.log(`Would have done trade here, isbuy: ${doBuy}, pool price: ${await this.uniV3.getPoolPrice()} theoprice: ${await getTheoSlvtPrice()}`);
+                    console.log(`Would have done trade here, isbuy: ${doBuy}, pool price: ${poolPrice} theoprice: ${await getTheoSlvtPrice()}`);
                 }
             } catch (e) {
                 ++numErrors;

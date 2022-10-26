@@ -12,7 +12,7 @@ export class Output {
     }
 
     async outputTradeStatus(numOrdersSent: number, numErrors: number, poolPrice: number, silverPrice: number) {
-        const sqlStr = `update trade_status \
+        const sqlStr = `update trade_status set \
         last_evaluation_time = '${new Date().toISOString().slice(0, 19).replace('T', ' ')}', \
         num_orders_sent = ${numOrdersSent}, \
         num_errors_seen = ${numErrors}, \
