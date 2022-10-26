@@ -179,6 +179,7 @@ export class RebalancePool {
         }
         console.log(`Rebalancing Program exiting`);
         console.log(`numTrades: ${numTrades}, numErrors: ${numErrors}, maxNumTrades: ${this.tradeConfig.maxNumTrades}, maxNumErrors: ${this.tradeConfig.maxNumErrors}`);
+        console.log(`data is valid: ${this.isDataValid()}, max errors reached: ${this.maxTradeAndErrorsReached(numTrades, numErrors)}`);
     }
 
     async buy() {
