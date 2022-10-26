@@ -36,7 +36,7 @@ Define the Config Vars PRIVATE_KEY and HTTP_CONNECTOR.
 For the PRIVATE_KEY don't put your private key in quotes.
 
 
-<h1>  Database Variable Explaination
+<h1>  Database Variable Explaination </h1>
 The variables in the heroku database affect how the program runs.
 The following is an explanation of what the variables do.
 
