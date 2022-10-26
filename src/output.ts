@@ -16,8 +16,9 @@ export class Output {
         last_evaluation_time = '${new Date().toISOString().slice(0, 19).replace('T', ' ')}', \
         num_orders_sent = ${numOrdersSent}, \
         num_errors_seen = ${numErrors}, \
-        pool_price = ${poolPrice} \
+        pool_price = ${poolPrice}, \
         silver_price = ${silverPrice}`;
+        
         console.log(`sqlStr: ${sqlStr}`);
         return sqlStr;
     }
