@@ -118,7 +118,7 @@ export class RebalancePool {
     // Ensure that tradeDataConfig exists
 
     async isDataValid() {
-        return this.tradeConfig && this.tradeConfig.buyAmt0;
+        return this.tradeConfig !==null && this.tradeConfig.buyAmt0>0;
     }
 
     async setupAllowances() {
