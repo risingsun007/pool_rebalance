@@ -118,8 +118,7 @@ export class RebalancePool {
     // Ensure that tradeDataConfig exists
 
     isDataValid() {
-        console.log(`trade config: ${JSON.stringify(this.tradeConfig, null, 2)}`);
-        return this.tradeConfig !==null && this.tradeConfig.buyAmt0>0;
+        return this.tradeConfig !==null && this.tradeConfig.hasOwnProperty('buyAmt0');
     }
 
     async setupAllowances() {
