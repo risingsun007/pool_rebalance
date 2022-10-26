@@ -1,4 +1,5 @@
 const { Pool, Client } = require("pg");
+import internal from "stream";
 import { snakeToCamelJson, Swap, TradeConfig, changeKeyName } from "./utils";
 
 export class DB {

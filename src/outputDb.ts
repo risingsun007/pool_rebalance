@@ -58,4 +58,15 @@ export class OutputDb extends Output {
         const sqlStr = this.swapToSql(result);
         await this.sendQuery(sqlStr);
     }
+
+    async outputTradeStatus(numOrdersSent: number, numErrors: number, poolPrice: number, silverPrice: number) {
+        super.outputTradeStatus(numOrdersSent, numErrors, poolPrice, silverPrice);
+        const sqlStr = `update trade_status \
+        set last_evaluation_time = ${Date.now().toString()}, \
+        set num_orders_sent = ${numOrdersSent}, \
+        set num_errors_seen = ${numErrors}, \
+        set pool_price = ${poolPrice} \
+        set silver_price = ${silverPrice}`;
+        const result = await this.client.query(sqlStr);
+    }
 }

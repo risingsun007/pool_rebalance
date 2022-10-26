@@ -156,6 +156,7 @@ export class RebalancePool {
             await this.updateConfig();
             poolPrice = await this.uniV3.getPoolPrice();
             console.log(`Pool price: ${poolPrice}, theoPrice: ${await getTheoSlvtPrice()}`);
+            await this.output.outputTradeStatus(numTrades, numErrors, poolPrice, await getTheoSlvtPrice());
             try {
                 const { doBuy, doSell } = await this.canTrade(poolPrice, lastPlaceOrderTime);
                 if (!doBuy && !doSell) {
