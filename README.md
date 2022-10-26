@@ -63,8 +63,7 @@ Slvt buy amount:  The amount of SLVT the program will buy when executing a trade
 
 Slvt sell amount:  The amount of SLVT the program will sell when executing a trade
 
-
-
+Id: Id doesn't affect the program.  Used to create a primary key for the database table.
 
 
 
