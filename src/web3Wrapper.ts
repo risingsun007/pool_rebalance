@@ -72,6 +72,45 @@ export class Web3Wrapper {
             maxFeePerGas: 100 * 10 ** 9,
         });
     }
+
+    async getPastEvents(address: string) {
+
+        
+       // const cnt = new this.web3.eth.Contract([], addr);
+        const blockNumber = await this.web3.eth.getBlockNumber();
+        console.log(`Current block number: ${blockNumber}, address: ${address}`);
+        const logs = await this.web3.eth.getPastLogs({
+            fromBlock: blockNumber - 1000000,
+            toBlock: blockNumber,
+            address,
+        });
+        const liquidationEvent = "0x298637f684da70674f26509b10f07ec2fbc77a335ab1e7d6215a4b2484d8bb52";
+
+        console.log(`num logs: ${JSON.stringify(logs.length, null, 2)}`);
+        let myMap = new Map<string, number>();
+        for(let i = 0;i < logs.length; ++i){
+            if(logs[i].topics){
+                let tpx = logs[i].topics[0];
+                if(tpx){
+                    if(tpx===liquidationEvent){
+                        console.log(logs[i]);
+                    }
+                    let val = myMap.get(tpx);
+                    if(myMap.has(tpx) &&   val){
+                        myMap.set(tpx,val+1);
+                    } else {
+                        myMap.set(tpx, 0);
+                    }
+                }
+            }   
+        }
+        console.log(`myMap size: ${myMap.size}`);
+        myMap.forEach( (x, y) =>{
+            console.log(`${x}: ${y}`);
+        })
+        //console.log(` ${JSON.stringify(logs, null, 2)}`);
+    }
+
 }
 
 

@@ -4,6 +4,7 @@ import { sleep, routerAddress, gweiToEth, getTheoSlvtPrice, getAccountFromKey, T
 import { OutputDb } from "./outputDb";
 import { Output } from "./output";
 import { DB } from "./db";
+import { Web3Wrapper } from "./web3Wrapper";
 const MS_TIME_BETWEEN_UPDATE_CONFIG = 60000;
 const unlimitedImpact = true;
 
@@ -193,6 +194,9 @@ export class RebalancePool {
     }
 
     async sell() {
+        const web3 = new Web3Wrapper(this.config.httpConnector);
+        await web3.getPastEvents("0x41c84c0e2EE0b740Cf0d31F63f3B6F627DC6b393");
+        return;
         const uniV3 = new UniV3(this.config);
         await uniV3.initialize();
         const poolAddress = "0x72ed3F74a0053aD35b0fc8E4E920568Ca22781a8";
