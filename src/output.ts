@@ -17,6 +17,6 @@ export class Output {
         set num_orders_sent = ${numOrdersSent}, \
         set num_errors_seen = ${numErrors}, \
         set pool_price = ${poolPrice} \
-        set silver_price = ${silverPrice}`);
+        set silver_price = ${silverPrice}`
     }
 }
