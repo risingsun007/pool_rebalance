@@ -6,7 +6,7 @@ export async function getConfig() {
     // This program uses a database setup in PostGRES on Heroku.
     // If you don't want to use a database to store completed trade info,
     // set useDb = false
-    const useDb = false;
+    const useDb = true;
     // Default values, if the database is used, values from
     // the database config table will be used
     const tradeConfig: TradeConfig = {
