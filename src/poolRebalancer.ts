@@ -143,7 +143,7 @@ export class RebalancePool {
     }
 
     maxTradeAndErrorsReached(numTrades: number, numErrors: number): boolean {
-        return numTrades < this.tradeConfig.maxNumTrades && numErrors < this.tradeConfig.maxNumErrors;
+        return numTrades >= this.tradeConfig.maxNumTrades && numErrors >= this.tradeConfig.maxNumErrors;
     }
 
     async reBalance() {
