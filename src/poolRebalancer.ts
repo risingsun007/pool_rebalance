@@ -151,7 +151,7 @@ export class RebalancePool {
         let lastPlaceOrderTime: number = 0;
         await this.setup();
 
-        while (!this.maxTradeAndErrorsReached(numTrades, numErrors) && this.isDataValid()) {
+        while (!this.maxTradeAndErrorsReached(numTrades, numErrors) && await this.isDataValid()) {
             await sleep(this.tradeConfig.sleepTimeMillSec);
             await this.updateConfig();
             poolPrice = await this.uniV3.getPoolPrice();
@@ -179,7 +179,7 @@ export class RebalancePool {
         }
         console.log(`Rebalancing Program exiting`);
         console.log(`numTrades: ${numTrades}, numErrors: ${numErrors}, maxNumTrades: ${this.tradeConfig.maxNumTrades}, maxNumErrors: ${this.tradeConfig.maxNumErrors}`);
-        console.log(`data is valid: ${this.isDataValid()}, max errors reached: ${this.maxTradeAndErrorsReached(numTrades, numErrors)}`);
+        console.log(`data is valid: ${await this.isDataValid()}, max errors reached: ${this.maxTradeAndErrorsReached(numTrades, numErrors)}`);
     }
 
     async buy() {
