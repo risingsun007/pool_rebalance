@@ -62,6 +62,7 @@ export class OutputDb extends Output {
     async outputTradeStatus(numOrdersSent: number, numErrors: number, poolPrice: number, silverPrice: number) {
         const sqlStr2  = super.outputTradeStatus(numOrdersSent, numErrors, poolPrice, silverPrice);
         const result = await this.client.query(sqlStr2);
+        console.log(`Result of updating trader_status status: ${JSON.stringify(result, null, 2)}`);
         return sqlStr2;
     }
 }

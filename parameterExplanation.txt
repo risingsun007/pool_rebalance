@@ -1,0 +1,27 @@
+CONFIG TABLE FIELD EXPLANATION.
+
+
+Target buy prct: The variable sets the level where the program buys SLVT.
+    When (price in Uniswap pool < Silver price * Target buy prct/100), the program buys
+
+Target sell prct: The variable sets the level where the program sells SLVT.
+    When (price in Uniswap pool > Silver price * Target sell prct/100), the program sells
+
+Min mill sec between trades: The minimum time until the program will do another trade
+    After doing a trade the program will need to wait (Min mill sec between trades) milliseconds
+    before it can do another trade
+
+Sleep time mill sec: The program will do evaluate whether or not to do a trade every (Sleep time mill sec)
+
+Max num errors: After the program does max number of errors, it will stop running and you will need to restart it
+
+Max num trades: After the program has done the max number of trades, it will stop running	
+
+Do make trades: If this is set to true, the program will trade.   If set to false the program will still
+    run but will not trade.
+
+Slvt buy amount:  The amount of SLVT the program will buy when executing a trade	
+
+Slvt sell amount:  The amount of SLVT the program will sell when executing a trade
+
+Id: Id doesn't affect the program.  Used to create a primary key for the database table.
